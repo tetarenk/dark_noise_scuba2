@@ -56,7 +56,6 @@ def grab_files(path_to_logs,file_out):
 				times8.extend(log_nep8['HST'][log_nep8['Shutter']==0.0])
 				subarr8.extend(log_nep8['Subarray'][log_nep8['Shutter']==0.0])
 			except Exception:
-				foo=2
 				skip8.append(day)
 		if os.path.isfile(path_dir+'/450-summit/log.nep'):
 			try:
@@ -73,7 +72,6 @@ def grab_files(path_to_logs,file_out):
 				times4.extend(log_nep4['HST'][log_nep4['Shutter']==0.0])
 				subarr4.extend(log_nep4['Subarray'][log_nep4['Shutter']==0.0])
 			except Exception:
-				foo=2
 				skip4.append(day)
 	fileo=open(file_out+'s8.txt','w')
 	for i in range(0,len(times8)):
