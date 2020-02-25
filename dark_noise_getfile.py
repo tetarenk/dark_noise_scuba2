@@ -7,8 +7,8 @@ INPUT: Path to log files on EAO computer
 OUTPUT: Effective NEP vs Time plots for 450/850 um 
         Histogram plots of Effective NEP split by sub-array for 450/850 um
 NOTES: Needs to be run on EAO computer.
-
-Last Updated: Feb 22, 2020
+ 
+Last Updated: Feb 25, 2020
 Written by: A.J. Tetarenko, based on D. Bintley's C-shell script
 '''
 ###################################
@@ -24,9 +24,10 @@ from matplotlib import rc
 from matplotlib.ticker import AutoMinorLocator
 import matplotlib.dates as mdates
 
+
 def grab_files(path_to_logs,file_out):
 	''' Digs through the log files and grabs the Effective NEPs and dates/times
-	for each sub-array, then writes them to separate output files for 450/850 um'''
+    for each sub-array, then writes them to separate output files for 450/850 um'''
 	nep_eff8=[]
 	times8=[]
 	subarr8=[]
@@ -56,6 +57,7 @@ def grab_files(path_to_logs,file_out):
 				times8.extend(log_nep8['HST'][log_nep8['Shutter']==0.0])
 				subarr8.extend(log_nep8['Subarray'][log_nep8['Shutter']==0.0])
 			except Exception:
+				foo=2
 				skip8.append(day)
 		if os.path.isfile(path_dir+'/450-summit/log.nep'):
 			try:
@@ -72,6 +74,7 @@ def grab_files(path_to_logs,file_out):
 				times4.extend(log_nep4['HST'][log_nep4['Shutter']==0.0])
 				subarr4.extend(log_nep4['Subarray'][log_nep4['Shutter']==0.0])
 			except Exception:
+				foo=2
 				skip4.append(day)
 	fileo=open(file_out+'s8.txt','w')
 	for i in range(0,len(times8)):
@@ -90,12 +93,12 @@ def grab_files(path_to_logs,file_out):
 path_to_logs='/jcmtdata/raw/pipeline-log/'
 file_out='/export/data2/atetarenko/dark_noise/files/'
 
-#event dates to add to time series plots
-bad_dates={'Mem. Off': '2017-12-06', 'Mem. On': '2018-04-30',\
-'New Filters': '2016-11-19', 'SMU Fix': '2018-07-27'}
+#dates to mark in Effective NEPs time series
+bad_dates={'Mem. Off': '2017-12-06', 'Mem. On': '2018-04-30', 'New Filters': '2016-11-19', 'SMU Fix': '2018-07-27'}
 
-#start date for Effective NEP histograms
-date_after='2018-01-01'
+#parameters for creating histograms of Effective NEPs
+date_after='2019-01-01'
+thresh=5e-17
 ###################################
 
 #grab the info needed from JCMT logs
@@ -113,7 +116,6 @@ mpl.rcParams['xtick.direction'] ='in'
 mpl.rcParams['ytick.direction'] ='in'
 fig=plt.figure()
 ax=plt.subplot(111)
-#ax2=ax.twiny()
 ax.plot(Time(s8['MJD'][s8['Subarr']=='s8a'],format='mjd').datetime, s8['NEP'][s8['Subarr']=='s8a']*1e18,label='s8a',color='b',marker='o',ls='',ms=2)#,markevery=10)
 ax.plot(Time(s8['MJD'][s8['Subarr']=='s8b'],format='mjd').datetime, s8['NEP'][s8['Subarr']=='s8b']*1e18,label='s8b',color='orange',marker='o',ls='',ms=2)#,markevery=10)
 ax.plot(Time(s8['MJD'][s8['Subarr']=='s8c'],format='mjd').datetime, s8['NEP'][s8['Subarr']=='s8c']*1e18,label='s8c',color='g',marker='o',ls='',ms=2)#,markevery=10)
@@ -125,7 +127,6 @@ ax.set_xlabel('Time')
 ax.set_ylabel('Effective NEP ($\\times 10^{-18}$)')
 ax.legend(loc='upper left', ncol=2,facecolor='w',framealpha=1)
 ax.set_ylim(1,6000)
-#ax.yaxis.set_minor_locator(AutoMinorLocator(5))
 ax.set_yscale('log')
 years=mdates.YearLocator(1)
 months=mdates.MonthLocator(7)
@@ -143,7 +144,6 @@ plt.show()
 #Effective NEP vs time for 450um
 fig=plt.figure()
 ax=plt.subplot(111)
-#ax2=ax.twiny()
 ax.plot(Time(s4['MJD'][s4['Subarr']=='s4a'],format='mjd').datetime, s4['NEP'][s4['Subarr']=='s4a']*1e18,label='s4a',color='b',marker='o',ls='',ms=2)#,markevery=10)
 ax.plot(Time(s4['MJD'][s4['Subarr']=='s4b'],format='mjd').datetime, s4['NEP'][s4['Subarr']=='s4b']*1e18,label='s4b',color='orange',marker='o',ls='',ms=2)#,markevery=10)
 ax.plot(Time(s4['MJD'][s4['Subarr']=='s4c'],format='mjd').datetime, s4['NEP'][s4['Subarr']=='s4c']*1e18,label='s4c',color='g',marker='o',ls='',ms=2)#,markevery=10)
@@ -154,8 +154,6 @@ ax.legend(loc='upper left', ncol=2,facecolor='w',framealpha=1)
 for item in bad_dates.keys():
 	ax.axvline(x=Time(bad_dates[item],format='iso').datetime, color='k',ls=':')
 	ax.text(Time(bad_dates[item],format='iso').datetime,8000, item,rotation=90,fontsize=10)
-#ax.set_ylim(3,200)
-#ax.yaxis.set_minor_locator(AutoMinorLocator(5))
 ax.set_yscale('log')
 years=mdates.YearLocator(1)
 months=mdates.MonthLocator(7)
@@ -170,8 +168,6 @@ ax.tick_params(axis='y', which='major',labelsize=15,length=7, width=1.5,left='on
 ax.tick_params(axis='y', which='minor',labelsize=15,length=5, width=1.,left='on',right='on',pad=7)
 plt.savefig(file_out+'s450_NEPvstime.pdf',bbox_inches='tight')
 plt.show()
-
-
 
 #Effective NEP Histograms for 850um
 s8a=s8[s8['Subarr']=='s8a']
@@ -215,15 +211,31 @@ ax2.set_xlabel('Effective NEP ($\\times 10^{-18}$)')
 ax2.xaxis.set_label_coords(1.1,-0.2)
 ax2.set_ylabel('Number of Occurences')
 ax2.yaxis.set_label_coords(-0.25,1.1)
-ax.legend(loc='upper right', ncol=1)
-ax1.legend(loc='upper right', ncol=1)
-ax2.legend(loc='upper right', ncol=1)
-ax3.legend(loc='upper right', ncol=1)
-ax.set_title(date_after+' - Present',x=1.1,y=1)
+#ax.legend(loc='upper right', ncol=1)
+#ax1.legend(loc='upper right', ncol=1)
+#ax2.legend(loc='upper right', ncol=1)
+#ax3.legend(loc='upper right', ncol=1)
+ax.set_ylim(0.7,3500)
+ax1.set_ylim(0.7,3500)
+ax2.set_ylim(0.7,3500)
+ax3.set_ylim(0.7,3500)
+ax.text(75,1000,'s8a',color='b',fontsize=14)
+ax1.text(75,1000,'s8b',color='orange',fontsize=14)
+ax2.text(75,1000,'s8c',color='g',fontsize=14)
+ax3.text(75,1000,'s8d',color='r',fontsize=14)
+ax.set_title('Data from: '+date_after+' - Present',x=1.1,y=1,fontsize=14)
 ax.set_xticklabels([])
 ax1.set_xticklabels([])
 ax1.set_yticklabels([])
 ax3.set_yticklabels([])
+ax.axvline(x=thresh*1e18,ls=':',color='k',lw=3)
+ax1.axvline(x=thresh*1e18,ls=':',color='k',lw=3)
+ax2.axvline(x=thresh*1e18,ls=':',color='k',lw=3)
+ax3.axvline(x=thresh*1e18,ls=':',color='k',lw=3)
+ax.text((thresh+0.5e-17)*1e18,100, 'Threshold',rotation=90,fontsize=10)
+ax1.text((thresh+0.5e-17)*1e18,100, 'Threshold',rotation=90,fontsize=10)
+ax2.text((thresh+0.5e-17)*1e18,100, 'Threshold',rotation=90,fontsize=10)
+ax3.text((thresh+0.5e-17)*1e18,100, 'Threshold',rotation=90,fontsize=10)
 plt.subplots_adjust(hspace=0.1,wspace=0.1)
 plt.savefig(file_out+'s850_NEP_hists.pdf',bbox_inches='tight')
 plt.show()
@@ -270,15 +282,31 @@ ax2.set_xlabel('Effective NEP ($\\times 10^{-18}$)')
 ax2.xaxis.set_label_coords(1.1,-0.2)
 ax2.set_ylabel('Number of Occurences')
 ax2.yaxis.set_label_coords(-0.25,1.1)
-ax.legend(loc='upper right', ncol=1)
-ax1.legend(loc='upper right', ncol=1)
-ax2.legend(loc='upper right', ncol=1)
-ax3.legend(loc='upper right', ncol=1)
-ax.set_title(date_after+' - Present',x=1.1,y=1)
+#ax.legend(loc='upper right', ncol=1)
+#ax1.legend(loc='upper right', ncol=1)
+#ax2.legend(loc='upper right', ncol=1)
+#ax3.legend(loc='upper right', ncol=1)
+ax.set_ylim(0.7,3500)
+ax1.set_ylim(0.7,3500)
+ax2.set_ylim(0.7,3500)
+ax3.set_ylim(0.7,3500)
+ax.text(75,1000,'s4a',color='b',fontsize=14)
+ax1.text(75,1000,'s4b',color='orange',fontsize=14)
+ax2.text(75,1000,'s4c',color='g',fontsize=14)
+ax3.text(75,1000,'s4d',color='r',fontsize=14)
+ax.set_title('Data from: '+date_after+' - Present',x=1.1,y=1,fontsize=14)
 ax.set_xticklabels([])
 ax1.set_xticklabels([])
 ax1.set_yticklabels([])
 ax3.set_yticklabels([])
+ax.axvline(x=thresh*1e18,ls=':',color='k',lw=3)
+ax1.axvline(x=thresh*1e18,ls=':',color='k',lw=3)
+ax2.axvline(x=thresh*1e18,ls=':',color='k',lw=3)
+ax3.axvline(x=thresh*1e18,ls=':',color='k',lw=3)
+ax.text((thresh+0.5e-17)*1e18,100, 'Threshold',rotation=90,fontsize=10)
+ax1.text((thresh+0.5e-17)*1e18,100, 'Threshold',rotation=90,fontsize=10)
+ax2.text((thresh+0.5e-17)*1e18,100, 'Threshold',rotation=90,fontsize=10)
+ax3.text((thresh+0.5e-17)*1e18,100, 'Threshold',rotation=90,fontsize=10)
 plt.subplots_adjust(hspace=0.1,wspace=0.1)
 plt.savefig(file_out+'s450_NEP_hists.pdf',bbox_inches='tight')
 plt.show()
